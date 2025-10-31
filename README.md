@@ -1,10 +1,96 @@
-# NGO Finance Website
+# HOPE - NGO Finance Management System
 
-Comprehensive documentation for an NGO Finance Website that supports user sign up/sign in, NGO admin sign in (single admin signup or fixed credentials), donations (one-time & recurring with reminders), receipts, user & admin dashboards, expenditures, and requirements.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen)](https://nodejs.org/)
+[![GitHub Issues](https://img.shields.io/github/issues/omkarmane369/HOPE)](https://github.com/omkarmane369/HOPE/issues)
+
+A comprehensive web application for managing NGO finances, donations, campaigns, and donor relationships. Built with Node.js, Express, and SQLite.
 
 ---
 
-## Table of contents
+## 🚀 Quick Start
+
+### Download & Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/omkarmane369/HOPE.git
+cd HOPE
+
+# Install dependencies
+npm install
+
+# Configure environment
+cp .env.example .env
+# Edit .env with your settings
+
+# Start the server
+npm start
+```
+
+**Server runs at:** http://localhost:3000
+
+**Default Admin Login:**
+- Email: `admin@ngo.org`
+- Password: `Admin@123`
+
+📖 **[Full Installation Guide →](INSTALLATION.md)**
+
+---
+
+## ✨ Features
+
+### 🎯 Core Features
+- ✅ **User & Admin Authentication** - Secure signup/signin with role-based access
+- ✅ **One-time & Recurring Donations** - Complete donation workflow with PDF receipts
+- ✅ **Campaign Management** - Create campaigns with goals and track progress
+- ✅ **Financial Reports** - Generate comprehensive PDF reports
+- ✅ **Email Notifications** - Welcome, thank you, receipts, and reminders
+- ✅ **Database Backups** - Automated daily backups + manual backup
+- ✅ **Data Export** - CSV and Excel export for donors
+- ✅ **Advanced Filtering** - Search and filter across all sections
+- ✅ **Rate Limiting** - API protection against abuse
+
+### 👤 User Dashboard
+- Donation history with receipts
+- Recurring donation management
+- Campaign browsing
+- Expenditure transparency
+- Requirements tracking
+- Contact form
+
+### 👨‍💼 Admin Dashboard
+- Complete donor management
+- Campaign creation & tracking
+- Expenditure management with receipts
+- Requirements management
+- Financial reporting
+- Data export (CSV/Excel)
+- Database backups
+- Audit logging
+
+---
+
+## 📥 Download Options
+
+### Option 1: Clone from GitHub (Recommended)
+```bash
+git clone https://github.com/omkarmane369/HOPE.git
+```
+
+### Option 2: Download ZIP
+1. Go to: https://github.com/omkarmane369/HOPE
+2. Click **Code** → **Download ZIP**
+3. Extract and follow installation guide
+
+### Option 3: GitHub Desktop
+1. Open GitHub Desktop
+2. File → Clone Repository
+3. URL: `https://github.com/omkarmane369/HOPE.git`
+
+---
+
+## 📋 Table of contents
 
 - Overview
 - Goals & success criteria

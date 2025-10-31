@@ -1,0 +1,24 @@
+<%- include('../partials/head') %>
+<section class="auth-card">
+  <h1>Choose your sign up or sign in path</h1>
+  <div class="card-grid">
+    <div class="card">
+      <h2>Supporters</h2>
+      <p>Register or sign in to donate, manage receipts, and follow NGO impact.</p>
+      <div class="action-group">
+        <a class="btn btn-primary" href="/auth/signup">Sign up as Donor</a>
+        <a class="btn btn-outline" href="/auth/signin">Sign in as Donor</a>
+      </div>
+    </div>
+    <div class="card">
+      <h2>NGO Administrators</h2>
+      <p>Access dashboards, manage requirements, expenditures, and donor relations.</p>
+      <div class="action-group">
+        <a class="btn btn-primary" href="/auth/signin?role=admin">Sign in as Admin</a>
+        <a class="btn btn-outline" href="/auth/admin-signup">Create admin account</a>
+      </div>
+      <p class="hint">Admin signup is restricted to a single account. Use environment credentials for production.</p>
+    </div>
+  </div>
+</section>
+<%- include('../partials/footer') %>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> | HOPE NGO</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+</head>
+<body>
+  <header class="top-bar">
+    <div class="container flex between center-v">
+      <div>
+        <a class="brand" href="/">HOPE NGO</a>
+        <p class="tagline"><%= ngoProfile.tagline %></p>
+      </div>
+      <nav class="main-nav">
+        <% if (currentUser) { %>
+          <span class="user-pill">Signed in as <strong><%= currentUser.full_name %></strong> (<%= currentUser.role %>)</span>
+          <form action="/auth/logout" method="post" class="inline-form">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button type="submit" class="btn btn-outline">Sign out</button>
+          </form>
+        <% } else { %>
+          <a class="btn" href="/auth/signin">Sign in</a>
+          <a class="btn btn-outline" href="/auth/signup">User Sign up</a>
+        <% } %>
+      </nav>
+    </div>
+  </header>
+  <main class="main-content container">
+    <% if (flash && flash.length) { %>
+      <div class="flash-stack">
+        <% flash.forEach(item => { %>
+          <div class="flash flash-<%= item.type %>"><%= item.message %></div>
+        <% }) %>
+      </div>
+    <% } %>

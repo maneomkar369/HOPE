@@ -1,0 +1,55 @@
+<%- include('../partials/head') %>
+<section class="auth-card">
+  <h1>Create NGO admin account</h1>
+  <p class="hint">Only one admin account can be created. Subsequent admin access should use the seeded credentials.</p>
+  <form method="post" action="/auth/admin-signup" class="form-grid">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <label class="span-2">
+      NGO name
+      <input type="text" name="ngo_name" value="<%= values.ngo_name || '' %>" required>
+    </label>
+    <label>
+      NGO email
+      <input type="email" name="email" value="<%= values.email || '' %>" required>
+    </label>
+    <label>
+      Primary contact number
+      <input type="tel" name="contact_number" value="<%= values.contact_number || '' %>" required>
+    </label>
+    <label>
+      Secondary contact number
+      <input type="tel" name="contact_number_secondary" value="<%= values.contact_number_secondary || '' %>">
+    </label>
+    <label class="span-2">
+      NGO address
+      <textarea name="address" rows="2" required><%= values.address || '' %></textarea>
+    </label>
+    <label>
+      Owner / primary contact name
+      <input type="text" name="owner_name" value="<%= values.owner_name || '' %>" required>
+    </label>
+    <label>
+      Owner ID proof type
+      <select name="owner_id_proof_type" required>
+        <option value="">Select</option>
+        <% ['Aadhaar','Passport','Voter ID','Driving License','Other'].forEach((item) => { %>
+          <option value="<%= item %>" <%= values.owner_id_proof_type === item ? 'selected' : '' %>><%= item %></option>
+        <% }) %>
+      </select>
+    </label>
+    <label>
+      Owner ID proof number
+      <input type="text" name="owner_id_proof_number" value="<%= values.owner_id_proof_number || '' %>" required>
+    </label>
+    <label>
+      Password
+      <input type="password" name="password" required>
+    </label>
+    <label>
+      Confirm password
+      <input type="password" name="confirm_password" required>
+    </label>
+    <button class="btn btn-primary span-2" type="submit">Create admin account</button>
+  </form>
+</section>
+<%- include('../partials/footer') %>

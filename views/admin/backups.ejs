@@ -1,0 +1,90 @@
+<%- include('../partials/head') %>
+<section class="dashboard admin">
+  <h1>Database Backups</h1>
+  
+  <div class="panel">
+    <div class="panel-header">
+      <h2>Backup Management</h2>
+      <form method="post" action="/admin/backups/create" style="display: inline;">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <button type="submit" class="btn btn-primary">Create Backup Now</button>
+      </form>
+    </div>
+    
+    <!-- Backup Statistics -->
+    <div class="stats-grid" style="margin-bottom: 2rem;">
+      <div class="panel stat-card">
+        <h3>Total Backups</h3>
+        <p class="metric"><%= stats.count %></p>
+      </div>
+      <div class="panel stat-card">
+        <h3>Total Size</h3>
+        <p class="metric"><%= (stats.totalSize / 1024 / 1024).toFixed(2) %> MB</p>
+      </div>
+      <div class="panel stat-card">
+        <h3>Latest Backup</h3>
+        <p class="metric">
+          <% if (stats.newestBackup) { %>
+            <%= new Date(stats.newestBackup).toLocaleDateString() %>
+          <% } else { %>
+            N/A
+          <% } %>
+        </p>
+      </div>
+    </div>
+    
+    <!-- Backup Information -->
+    <div class="info-box" style="background: #e7f3ff; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border-left: 4px solid #0b7285;">
+      <h3 style="margin-top: 0; color: #0b7285;">About Backups</h3>
+      <ul style="margin: 0; padding-left: 1.5rem;">
+        <li>Automated backups run daily at 2:00 AM</li>
+        <li>System keeps the last 30 backups automatically</li>
+        <li>You can create manual backups anytime using the button above</li>
+        <li>Download backups to store them externally for extra safety</li>
+        <li>Backups include all donations, users, expenditures, and requirements</li>
+      </ul>
+    </div>
+    
+    <!-- Backups List -->
+    <% if (backups.length === 0) { %>
+      <p>No backups available. Create your first backup using the button above.</p>
+    <% } else { %>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Filename</th>
+            <th>Created</th>
+            <th>Size</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% backups.forEach((backup) => { %>
+            <tr>
+              <td><strong><%= backup.filename %></strong></td>
+              <td><%= new Date(backup.created).toLocaleString() %></td>
+              <td><%= (backup.size / 1024).toFixed(2) %> KB</td>
+              <td>
+                <div class="action-group">
+                  <a href="/admin/backups/<%= backup.filename %>/download" class="btn btn-outline">Download</a>
+                  <form method="post" action="/admin/backups/<%= backup.filename %>/delete" style="display: inline;">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <button type="submit" class="btn btn-outline" 
+                            onclick="return confirm('Are you sure you want to delete this backup?')">
+                      Delete
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } %>
+    
+    <div style="margin-top: 2rem;">
+      <a href="/admin/dashboard" class="btn btn-outline">Back to Dashboard</a>
+    </div>
+  </div>
+</section>
+<%- include('../partials/footer') %>

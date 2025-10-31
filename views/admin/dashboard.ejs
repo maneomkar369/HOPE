@@ -1,0 +1,449 @@
+<%- include('../partials/head') %>
+<section class="dashboard admin">
+  <h1>Admin Dashboard</h1>
+  
+  <!-- Quick Actions -->
+  <div style="margin-bottom: 1rem;">
+    <a href="/admin/backups" class="btn btn-outline">📦 Database Backups</a>
+    <a href="/admin/reports" class="btn btn-outline">📊 Financial Reports</a>
+  </div>
+  
+  <!-- Tabs Navigation -->
+  <div class="tabs">
+    <a class="tab <%= tab === 'overview' ? 'active' : '' %>" href="/admin/dashboard?tab=overview">Overview</a>
+    <a class="tab <%= tab === 'donors' ? 'active' : '' %>" href="/admin/dashboard?tab=donors">Donors</a>
+    <a class="tab <%= tab === 'campaigns' ? 'active' : '' %>" href="/admin/dashboard?tab=campaigns">Campaigns</a>
+    <a class="tab <%= tab === 'expenditures' ? 'active' : '' %>" href="/admin/dashboard?tab=expenditures">Expenditures</a>
+    <a class="tab <%= tab === 'requirements' ? 'active' : '' %>" href="/admin/dashboard?tab=requirements">Requirements</a>
+    <a class="tab <%= tab === 'messages' ? 'active' : '' %>" href="/admin/dashboard?tab=messages">Messages</a>
+    <a class="tab <%= tab === 'audit' ? 'active' : '' %>" href="/admin/dashboard?tab=audit">Audit Log</a>
+  </div>
+
+  <% if (tab === 'overview') { %>
+    <!-- Stats Overview -->
+    <div class="stats-grid">
+      <div class="panel stat-card">
+        <h2>Total Donations</h2>
+        <p class="metric">₹ <%= aggregates.totals.total_amount.toFixed(2) %></p>
+        <p><%= aggregates.totals.donation_count %> donations recorded</p>
+      </div>
+      <div class="panel stat-card">
+        <h2>Registered Users</h2>
+        <p class="metric"><%= users.length %></p>
+        <p>Donor profiles created</p>
+      </div>
+      <div class="panel stat-card">
+        <h2>Recent Messages</h2>
+        <p class="metric"><%= messages.length %></p>
+        <p>Latest supporter communications</p>
+      </div>
+    </div>
+
+    <!-- Chart Section -->
+    <section class="panel chart-panel">
+      <h2>Monthly Donation Trend</h2>
+      <canvas id="adminDonationChart" data-chart="<%- JSON.stringify(aggregates.monthly) %>"></canvas>
+    </section>
+
+    <!-- Recent Donations -->
+    <section class="panel">
+      <h2>Recent Donations</h2>
+      
+      <!-- Filter Form -->
+      <div class="filter-panel">
+        <form method="get" action="/admin/dashboard" class="filter-form">
+          <input type="hidden" name="tab" value="overview">
+          <div class="filter-row">
+            <input type="date" name="dateFrom" placeholder="From Date" value="<%= filters?.dateFrom || '' %>">
+            <input type="date" name="dateTo" placeholder="To Date" value="<%= filters?.dateTo || '' %>">
+            <input type="number" name="minAmount" placeholder="Min Amount" value="<%= filters?.minAmount || '' %>" step="0.01">
+            <input type="number" name="maxAmount" placeholder="Max Amount" value="<%= filters?.maxAmount || '' %>" step="0.01">
+            <select name="status">
+              <option value="">All Status</option>
+              <option value="pending" <%= filters?.status === 'pending' ? 'selected' : '' %>>Pending</option>
+              <option value="completed" <%= filters?.status === 'completed' ? 'selected' : '' %>>Completed</option>
+              <option value="failed" <%= filters?.status === 'failed' ? 'selected' : '' %>>Failed</option>
+            </select>
+            <select name="donationType">
+              <option value="">All Types</option>
+              <option value="one-time" <%= filters?.donationType === 'one-time' ? 'selected' : '' %>>One-time</option>
+              <option value="recurring" <%= filters?.donationType === 'recurring' ? 'selected' : '' %>>Recurring</option>
+            </select>
+            <button type="submit" class="btn btn-primary">Apply Filters</button>
+            <a href="/admin/dashboard?tab=overview" class="btn btn-outline">Clear</a>
+          </div>
+        </form>
+      </div>
+      
+      <% if (!donations.length) { %>
+        <p>No donations recorded yet.</p>
+      <% } else { %>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Donor</th>
+              <th>Amount</th>
+              <th>Method</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% donations.slice(0, 10).forEach((donation) => { %>
+              <tr>
+                <td><%= new Date(donation.created_at).toLocaleString() %></td>
+                <td><a href="/admin/users/<%= donation.user_id %>"><%= donation.user_name %></a></td>
+                <td>₹ <%= donation.amount.toFixed(2) %></td>
+                <td><%= donation.payment_method %></td>
+                <td><%= donation.status %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      <% } %>
+    </section>
+  <% } %>
+
+  <% if (tab === 'donors') { %>
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Donor Directory</h2>
+        <div class="action-group">
+          <a class="btn btn-outline" href="/admin/export/donors/csv">Export CSV</a>
+          <a class="btn btn-primary" href="/admin/export/donors/excel">Export Excel</a>
+        </div>
+      </div>
+      
+      <!-- Search Form -->
+      <div class="filter-panel">
+        <form method="get" action="/admin/dashboard" class="filter-form">
+          <input type="hidden" name="tab" value="donors">
+          <div class="filter-row">
+            <input type="text" name="search" placeholder="Search by name or email..." value="<%= filters?.search || '' %>" style="flex: 1;">
+            <button type="submit" class="btn btn-primary">Search</button>
+            <a href="/admin/dashboard?tab=donors" class="btn btn-outline">Clear</a>
+          </div>
+        </form>
+      </div>
+      
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Contact</th>
+            <th>Total Donated</th>
+            <th>Donations</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% users.forEach((user) => { %>
+            <tr>
+              <td><%= user.full_name %></td>
+              <td><%= user.email %></td>
+              <td><%= user.contact_number %></td>
+              <td>₹ <%= user.total_donated.toFixed(2) %></td>
+              <td><%= user.donation_count %></td>
+              <td><a class="btn btn-outline" href="/admin/users/<%= user.id %>">View Profile</a></td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </section>
+  <% } %>
+
+  <% if (tab === 'expenditures') { %>
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Expenditures</h2>
+        <button class="btn btn-primary" data-toggle="drawer" data-target="#expenditureDrawer">Add Expenditure</button>
+      </div>
+      
+      <!-- Search Form -->
+      <div class="filter-panel">
+        <form method="get" action="/admin/dashboard" class="filter-form">
+          <input type="hidden" name="tab" value="expenditures">
+          <div class="filter-row">
+            <input type="text" name="expSearch" placeholder="Search expenditures..." value="<%= filters?.expSearch || '' %>" style="flex: 1;">
+            <button type="submit" class="btn btn-primary">Search</button>
+            <a href="/admin/dashboard?tab=expenditures" class="btn btn-outline">Clear</a>
+          </div>
+        </form>
+      </div>
+      
+      <% if (!expenditures.length) { %>
+        <p>No expenditures recorded yet.</p>
+      <% } else { %>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Title</th>
+              <th>Description</th>
+              <th>Amount</th>
+              <th>Added by</th>
+              <th>Receipt</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% expenditures.forEach((item) => { %>
+              <tr>
+                <td><%= new Date(item.spent_on).toLocaleDateString() %></td>
+                <td><%= item.title %></td>
+                <td><%= item.description %></td>
+                <td>₹ <%= item.amount.toFixed(2) %></td>
+                <td><%= item.added_by_name || 'Admin' %></td>
+                <td>
+                  <% if (item.receipt_path) { %>
+                    <a class="btn btn-outline" href="/admin/expenditures/<%= item.id %>/receipt">View</a>
+                  <% } else { %>
+                    N/A
+                  <% } %>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      <% } %>
+    </section>
+  <% } %>
+
+  <% if (tab === 'requirements') { %>
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Requirements</h2>
+        <button class="btn btn-primary" data-toggle="drawer" data-target="#requirementDrawer">Add Requirement</button>
+      </div>
+      
+      <!-- Filter Form -->
+      <div class="filter-panel">
+        <form method="get" action="/admin/dashboard" class="filter-form">
+          <input type="hidden" name="tab" value="requirements">
+          <div class="filter-row">
+            <input type="text" name="reqSearch" placeholder="Search requirements..." value="<%= filters?.reqSearch || '' %>" style="flex: 1;">
+            <select name="reqStatus">
+              <option value="">All Status</option>
+              <option value="open" <%= filters?.reqStatus === 'open' ? 'selected' : '' %>>Open</option>
+              <option value="in_progress" <%= filters?.reqStatus === 'in_progress' ? 'selected' : '' %>>In Progress</option>
+              <option value="completed" <%= filters?.reqStatus === 'completed' ? 'selected' : '' %>>Completed</option>
+            </select>
+            <button type="submit" class="btn btn-primary">Filter</button>
+            <a href="/admin/dashboard?tab=requirements" class="btn btn-outline">Clear</a>
+          </div>
+        </form>
+      </div>
+      
+      <% if (!requirements.length) { %>
+        <p>No active requirements.</p>
+      <% } else { %>
+        <div class="cards">
+          <% requirements.forEach((item) => { %>
+            <article class="card">
+              <h3><%= item.title %></h3>
+              <p><strong>Budget:</strong> ₹ <%= item.budget_amount.toFixed(2) %></p>
+              <p><strong>Timeline:</strong> <%= item.tentative_start || 'TBD' %> — <%= item.tentative_end || 'TBD' %></p>
+              <p><%= item.description %></p>
+              <div class="action-group">
+                <form method="post" action="/admin/requirements/<%= item.id %>/delete">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <button class="btn btn-outline" type="submit">Delete</button>
+                </form>
+              </div>
+            </article>
+          <% }) %>
+        </div>
+      <% } %>
+    </section>
+  <% } %>
+
+  <% if (tab === 'campaigns') { %>
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Donation Campaigns</h2>
+        <button class="btn btn-primary" data-toggle="drawer" data-target="#campaignDrawer">Create Campaign</button>
+      </div>
+      
+      <% if (!campaigns.length) { %>
+        <p>No campaigns created yet.</p>
+      <% } else { %>
+        <div class="cards">
+          <% campaigns.forEach((campaign) => { 
+            const progress = (campaign.current_amount / campaign.goal_amount * 100).toFixed(1);
+            const progressCapped = Math.min(progress, 100);
+          %>
+            <article class="card">
+              <h3><%= campaign.title %></h3>
+              <p><%= campaign.description %></p>
+              
+              <div style="margin: 1rem 0;">
+                <div style="background: #e9ecef; height: 20px; border-radius: 10px; overflow: hidden;">
+                  <div style="background: #0b7285; height: 100%; width: <%= progressCapped %>%; transition: width 0.3s;"></div>
+                </div>
+                <p style="margin-top: 0.5rem; font-size: 0.9rem;">
+                  <strong>₹<%= campaign.current_amount.toFixed(2) %></strong> raised of 
+                  <strong>₹<%= campaign.goal_amount.toFixed(2) %></strong> goal (<%= progressCapped %>%)
+                </p>
+              </div>
+              
+              <p><strong>Status:</strong> <span class="badge badge-<%= campaign.status === 'active' ? 'success' : 'secondary' %>"><%= campaign.status %></span></p>
+              <p><strong>Start:</strong> <%= new Date(campaign.start_date).toLocaleDateString() %></p>
+              <% if (campaign.end_date) { %>
+                <p><strong>End:</strong> <%= new Date(campaign.end_date).toLocaleDateString() %></p>
+              <% } %>
+              
+              <div class="action-group">
+                <a href="/admin/campaigns/<%= campaign.id %>" class="btn btn-outline">View Details</a>
+                <form method="post" action="/admin/campaigns/<%= campaign.id %>/delete" style="display: inline;">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <button class="btn btn-outline" type="submit" onclick="return confirm('Delete this campaign?')">Delete</button>
+                </form>
+              </div>
+            </article>
+          <% }) %>
+        </div>
+      <% } %>
+    </section>
+    
+    <!-- Create Campaign Drawer -->
+    <aside id="campaignDrawer" class="drawer">
+      <div class="drawer-content">
+        <button class="drawer-close" data-close="drawer">&times;</button>
+        <h2>Create New Campaign</h2>
+        <form method="post" action="/admin/campaigns">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          
+          <label for="campaign-title">Campaign Title *</label>
+          <input type="text" id="campaign-title" name="title" required>
+          
+          <label for="campaign-description">Description *</label>
+          <textarea id="campaign-description" name="description" rows="4" required></textarea>
+          
+          <label for="campaign-goal">Goal Amount (₹) *</label>
+          <input type="number" id="campaign-goal" name="goal_amount" step="0.01" required>
+          
+          <label for="campaign-start">Start Date *</label>
+          <input type="date" id="campaign-start" name="start_date" required>
+          
+          <label for="campaign-end">End Date (Optional)</label>
+          <input type="date" id="campaign-end" name="end_date">
+          
+          <label for="campaign-image">Image URL (Optional)</label>
+          <input type="url" id="campaign-image" name="image_url" placeholder="https://example.com/image.jpg">
+          
+          <label for="campaign-status">Status</label>
+          <select id="campaign-status" name="status">
+            <option value="active">Active</option>
+            <option value="paused">Paused</option>
+            <option value="completed">Completed</option>
+          </select>
+          
+          <button type="submit" class="btn btn-primary">Create Campaign</button>
+        </form>
+      </div>
+    </aside>
+  <% } %>
+
+  <% if (tab === 'messages') { %>
+    <section class="panel">
+      <h2>User Messages</h2>
+      <% if (!messages.length) { %>
+        <p>No messages received yet.</p>
+      <% } else { %>
+        <ul class="list">
+          <% messages.forEach((msg) => { %>
+            <li>
+              <p><strong><%= msg.name %></strong> (<%= msg.email %>) — <em><%= new Date(msg.created_at).toLocaleString() %></em></p>
+              <p><strong><%= msg.subject %>:</strong> <%= msg.message %></p>
+            </li>
+          <% }) %>
+        </ul>
+      <% } %>
+    </section>
+  <% } %>
+
+  <% if (tab === 'audit') { %>
+    <section class="panel">
+      <h2>Recent Admin Actions</h2>
+      <% if (!auditLogs.length) { %>
+        <p>No recent actions logged.</p>
+      <% } else { %>
+        <ul class="list">
+          <% auditLogs.forEach((log) => { %>
+            <li>
+              <p><strong><%= log.admin_name || 'Admin' %></strong> performed <%= log.action %> — <%= new Date(log.created_at).toLocaleString() %></p>
+              <% if (log.details) { %>
+                <p><small><%= log.details %></small></p>
+              <% } %>
+            </li>
+          <% }) %>
+        </ul>
+      <% } %>
+    </section>
+  <% } %>
+</section>
+
+<div class="drawer" id="requirementDrawer">
+  <div class="drawer-content">
+    <button class="drawer-close" data-dismiss="drawer">×</button>
+    <h2>Add Requirement</h2>
+    <form method="post" action="/admin/requirements" class="form-grid">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <label class="span-2">
+        Title
+        <input type="text" name="title" required>
+      </label>
+      <label class="span-2">
+        Description
+        <textarea name="description" rows="3" required></textarea>
+      </label>
+      <label>
+        Budget amount (₹)
+        <input type="number" name="budget_amount" step="0.01" min="0" required>
+      </label>
+      <label>
+        Tentative start date
+        <input type="date" name="tentative_start">
+      </label>
+      <label>
+        Tentative end date
+        <input type="date" name="tentative_end">
+      </label>
+      <button class="btn btn-primary span-2" type="submit">Save requirement</button>
+    </form>
+  </div>
+</div>
+
+<div class="drawer" id="expenditureDrawer">
+  <div class="drawer-content">
+    <button class="drawer-close" data-dismiss="drawer">×</button>
+    <h2>Add Expenditure</h2>
+    <form method="post" action="/admin/expenditures" enctype="multipart/form-data" class="form-grid">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <label class="span-2">
+        Title
+        <input type="text" name="title" required>
+      </label>
+      <label class="span-2">
+        Description
+        <textarea name="description" rows="3" required></textarea>
+      </label>
+      <label>
+        Amount (₹)
+        <input type="number" name="amount" step="0.01" min="0" required>
+      </label>
+      <label>
+        Spent on
+        <input type="date" name="spent_on" required>
+      </label>
+      <label class="span-2">
+        Receipt (PDF/JPG/PNG)
+        <input type="file" name="receipt" accept="application/pdf,image/*">
+      </label>
+      <button class="btn btn-primary span-2" type="submit">Save expenditure</button>
+    </form>
+  </div>
+</div>
+
+<script src="/js/admin.js" defer></script>
+<%- include('../partials/footer') %>

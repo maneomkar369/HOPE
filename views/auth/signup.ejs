@@ -1,0 +1,47 @@
+<%- include('../partials/head') %>
+<section class="auth-card">
+  <h1>Create your donor account</h1>
+  <form method="post" action="/auth/signup" class="form-grid">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <label>
+      Full name
+      <input type="text" name="full_name" value="<%= values.full_name || '' %>" required>
+    </label>
+    <label>
+      Email
+      <input type="email" name="email" value="<%= values.email || '' %>" required>
+    </label>
+    <label>
+      Contact number
+      <input type="tel" name="contact_number" value="<%= values.contact_number || '' %>" required>
+    </label>
+    <label class="span-2">
+      Address
+      <textarea name="address" rows="2" required><%= values.address || '' %></textarea>
+    </label>
+    <label>
+      ID proof type
+      <select name="id_proof_type" required>
+        <option value="">Select</option>
+        <% ['Aadhaar','Passport','Voter ID','Driving License','Other'].forEach((item) => { %>
+          <option value="<%= item %>" <%= values.id_proof_type === item ? 'selected' : '' %>><%= item %></option>
+        <% }) %>
+      </select>
+    </label>
+    <label>
+      ID proof number
+      <input type="text" name="id_proof_number" value="<%= values.id_proof_number || '' %>" required>
+    </label>
+    <label>
+      Password
+      <input type="password" name="password" required>
+    </label>
+    <label>
+      Confirm password
+      <input type="password" name="confirm_password" required>
+    </label>
+    <button class="btn btn-primary span-2" type="submit">Create account</button>
+  </form>
+  <p class="hint">Already have an account? <a href="/auth/signin">Sign in</a>.</p>
+</section>
+<%- include('../partials/footer') %>

@@ -1,0 +1,48 @@
+<%- include('../partials/head') %>
+<section class="dashboard admin">
+  <a class="btn btn-outline" href="/admin/dashboard">← Back to dashboard</a>
+  <header class="panel">
+    <h1><%= user.full_name %></h1>
+    <p><strong>Email:</strong> <%= user.email %></p>
+    <p><strong>Contact:</strong> <%= user.contact_number %></p>
+    <p><strong>Address:</strong> <%= user.address %></p>
+    <p><strong>ID Proof:</strong> <%= user.id_proof_type %> — <%= user.id_proof_number %></p>
+  </header>
+
+  <section class="panel">
+    <h2>Donation History</h2>
+    <% if (!donations.length) { %>
+      <p>No donations from this user yet.</p>
+    <% } else { %>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Amount</th>
+            <th>Method</th>
+            <th>Status</th>
+            <th>Receipt</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% donations.forEach((donation) => { %>
+            <tr>
+              <td><%= new Date(donation.created_at).toLocaleString() %></td>
+              <td>₹ <%= donation.amount.toFixed(2) %></td>
+              <td><%= donation.payment_method %></td>
+              <td><%= donation.status %></td>
+              <td>
+                <% if (donation.receipt_path) { %>
+                  <a class="btn btn-outline" href="/user/donations/<%= donation.id %>/receipt">Download</a>
+                <% } else { %>
+                  Pending
+                <% } %>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } %>
+  </section>
+</section>
+<%- include('../partials/footer') %>

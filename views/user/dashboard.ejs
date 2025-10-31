@@ -1,0 +1,278 @@
+<%- include('../partials/head') %>
+<section class="dashboard">
+  <div class="tabs">
+    <a class="tab <%= tab === 'home' ? 'active' : '' %>" href="/user/dashboard?tab=home">Home</a>
+    <a class="tab <%= tab === 'donation' ? 'active' : '' %>" href="/user/dashboard?tab=donation">Donation</a>
+    <a class="tab <%= tab === 'about' ? 'active' : '' %>" href="/user/dashboard?tab=about">About</a>
+    <a class="tab <%= tab === 'contact' ? 'active' : '' %>" href="/user/dashboard?tab=contact">Contact</a>
+    <a class="tab <%= tab === 'expenditure' ? 'active' : '' %>" href="/user/dashboard?tab=expenditure">Expenditure</a>
+    <a class="tab <%= tab === 'requirements' ? 'active' : '' %>" href="/user/dashboard?tab=requirements">Requirements</a>
+  </div>
+
+  <% if (tab === 'home') { %>
+    <section class="panel-grid">
+      <div class="panel">
+        <h2>Total Donated</h2>
+        <p class="metric">₹ <%= summary.totals.total_amount.toFixed(2) %></p>
+        <p><%= summary.totals.donation_count %> donations recorded</p>
+        <a class="btn btn-outline" href="/user/dashboard?tab=donation">Make another donation</a>
+      </div>
+      <div class="panel">
+        <h2>Donation Trend</h2>
+        <canvas id="donationTrendChart" data-chart="<%- JSON.stringify(summary.grouped) %>"></canvas>
+      </div>
+      <div class="panel span-2">
+        <h2>Donation History</h2>
+        <% if (!donations.length) { %>
+          <p>No donations yet. Visit the donation tab to contribute.</p>
+        <% } else { %>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Amount</th>
+                <th>Method</th>
+                <th>Status</th>
+                <th>Receipt</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% for (let i = 0; i < donations.length; i++) { var donation = donations[i]; %>
+                <tr>
+                  <td><%= new Date(donation.created_at).toLocaleString() %></td>
+                  <td>₹ <%= donation.amount.toFixed(2) %></td>
+                  <td><%= donation.payment_method %></td>
+                  <td><%= donation.status %></td>
+                  <td>
+                    <% if (donation.receipt_path) { %>
+                      <a class="btn btn-outline" href="/user/donations/<%= donation.id %>/receipt">Download</a>
+                    <% } else { %>
+                      Pending
+                    <% } %>
+                  </td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        <% } %>
+      </div>
+    </section>
+  <% } %>
+
+  <% if (tab === 'donation') { %>
+    <!-- Active Campaigns -->
+    <% if (campaigns && campaigns.length > 0) { %>
+      <section class="panel" style="margin-bottom: 2rem;">
+        <h2>Active Campaigns</h2>
+        <div class="cards">
+          <% campaigns.forEach((campaign) => { %>
+            <article class="card">
+              <h3><%= campaign.title %></h3>
+              <p><%= campaign.description %></p>
+              
+              <div style="margin: 1rem 0;">
+                <div style="background: #e9ecef; height: 20px; border-radius: 10px; overflow: hidden;">
+                  <div style="background: #0b7285; height: 100%; width: <%= campaign.progress_percentage %>%;"></div>
+                </div>
+                <p style="margin-top: 0.5rem; font-size: 0.9rem;">
+                  <strong>₹<%= campaign.current_amount.toFixed(2) %></strong> of 
+                  <strong>₹<%= campaign.goal_amount.toFixed(2) %></strong> (<%= campaign.progress_percentage %>%)
+                </p>
+              </div>
+              
+              <% if (campaign.end_date) { %>
+                <p style="font-size: 0.9rem;"><strong>Ends:</strong> <%= new Date(campaign.end_date).toLocaleDateString() %></p>
+              <% } %>
+            </article>
+          <% }) %>
+        </div>
+      </section>
+    <% } %>
+    
+    <section class="donation-layout">
+      <div class="panel donation-form">
+        <h2>Make a Donation</h2>
+        <form method="post" action="/user/donate" class="form-grid">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          
+          <% if (campaigns && campaigns.length > 0) { %>
+            <label class="span-2">
+              Campaign (Optional)
+              <select name="campaign_id">
+                <option value="">General Donation</option>
+                <% campaigns.forEach((campaign) => { %>
+                  <option value="<%= campaign.id %>"><%= campaign.title %></option>
+                <% }) %>
+              </select>
+            </label>
+          <% } %>
+          
+          <label>Amount (₹) <input type="number" name="amount" step="0.01" min="1" required></label>
+          <label>Payment method <select name="payment_method" required><option value="upi">UPI</option><option value="netbanking">Netbanking</option><option value="card">Card</option><option value="wallet">Wallet</option><option value="other">Other</option></select></label>
+          <label>UPI ID <input type="text" name="upi_id"></label>
+          <label>Bank name <input type="text" name="bank_name"></label>
+          <label class="span-2">Notes <input type="text" name="payment_notes"></label>
+          <label class="checkbox span-2"><input type="checkbox" name="recurring"> Set as recurring</label>
+          <div class="recurring-options">
+            <label>Frequency <select name="frequency"><option value="">Select</option><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select></label>
+            <label>Next run <input type="datetime-local" name="next_run"></label>
+            <label>End date <input type="date" name="end_date"></label>
+            <label>Max occurrences <input type="number" name="max_occurrences" min="1"></label>
+          </div>
+          <button class="btn btn-primary span-2" type="submit">Donate now</button>
+        </form>
+      </div>
+      <div class="donation-sidebar">
+        <div class="panel">
+          <h2>Recurring donations</h2>
+          <% if (!recurringDonations.length) { %>
+            <p>No recurring donations configured.</p>
+          <% } else { %>
+            <ul class="list">
+              <% for (let i = 0; i < recurringDonations.length; i++) { var item = recurringDonations[i]; %>
+                <li><strong><%= item.frequency %></strong> – ₹ <%= item.amount.toFixed(2) %> next on <%= item.next_run ? new Date(item.next_run).toLocaleString() : 'paused' %></li>
+              <% } %>
+            </ul>
+          <% } %>
+        </div>
+        <div class="panel">
+          <h2>Pending reminders</h2>
+          <% if (!reminders.length) { %>
+            <p>No pending reminders.</p>
+          <% } else { %>
+            <ul class="list">
+              <% for (let i = 0; i < reminders.length; i++) { var item = reminders[i]; %>
+                <li>
+                  <p><%= item.message %></p>
+                  <form method="post" action="/user/reminders/<%= item.id %>/confirm" class="inline-form"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button class="btn btn-primary" type="submit">Confirm</button></form>
+                  <form method="post" action="/user/reminders/<%= item.id %>/cancel" class="inline-form"><input type="hidden" name="_csrf" value="<%= csrfToken %>"><button class="btn btn-outline" type="submit">Pause</button></form>
+                </li>
+              <% } %>
+            </ul>
+          <% } %>
+        </div>
+      </div>
+    </section>
+  <% } %>
+
+  <% if (tab === 'about') { %>
+    <section class="panel-grid">
+      <div class="panel span-2">
+        <h2>About <%= ngoProfile.name %></h2>
+        <p><strong>Mission:</strong> <%= ngoProfile.mission %></p>
+        <p><strong>Vision:</strong> <%= ngoProfile.vision %></p>
+        <p><strong>Values:</strong> <%= ngoProfile.values.join(', ') %></p>
+        <p><strong>Transparency:</strong> <%= ngoProfile.transparencyStatement %></p>
+      </div>
+      <div class="panel">
+        <h3>Impact highlights</h3>
+        <ul class="list">
+          <% for (let i = 0; i < ngoProfile.impactHighlights.length; i++) { var item = ngoProfile.impactHighlights[i]; %>
+            <li><strong><%= item.title %></strong>: <%= item.description %></li>
+          <% } %>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>Campaigns</h3>
+        <ul class="list">
+          <% for (let i = 0; i < ngoProfile.campaigns.length; i++) { var campaign = ngoProfile.campaigns[i]; %>
+            <li><strong><%= campaign.name %></strong>: <%= campaign.description %></li>
+          <% } %>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>Team</h3>
+        <ul class="list">
+          <% for (let i = 0; i < ngoProfile.team.length; i++) { var member = ngoProfile.team[i]; %>
+            <li><strong><%= member.name %></strong> – <%= member.role %><br><small><%= member.bio %></small></li>
+          <% } %>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>Bank details</h3>
+        <p>Account: <%= ngoProfile.bankDetails.accountName %></p>
+        <p>Number: <%= ngoProfile.bankDetails.accountNumber %></p>
+        <p>IFSC: <%= ngoProfile.bankDetails.ifsc %></p>
+        <p>Bank: <%= ngoProfile.bankDetails.bankName %></p>
+        <p>UPI: <%= ngoProfile.bankDetails.upi %></p>
+      </div>
+    </section>
+  <% } %>
+
+  <% if (tab === 'contact') { %>
+    <section class="panel-grid">
+      <div class="panel span-2">
+        <h2>Contact admin</h2>
+        <form method="post" action="/user/contact" class="form-grid">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <label>Name <input type="text" name="name" value="<%= currentUser.full_name %>" required></label>
+          <label>Email <input type="email" name="email" value="<%= currentUser.email %>" required></label>
+          <label class="span-2">Subject <input type="text" name="subject" required></label>
+          <label class="span-2">Message <textarea name="message" rows="4" required></textarea></label>
+          <button class="btn btn-primary span-2" type="submit">Send message</button>
+        </form>
+      </div>
+      <div class="panel">
+        <h3>Reach us</h3>
+        <p><strong>Phone:</strong> <%= ngoProfile.contacts.primary %></p>
+        <p><strong>Email:</strong> <%= ngoProfile.contacts.email %></p>
+        <h4>Social</h4>
+        <ul class="list">
+          <li><a href="<%= ngoProfile.socialLinks.facebook %>" target="_blank">Facebook</a></li>
+          <li><a href="<%= ngoProfile.socialLinks.twitter %>" target="_blank">Twitter/X</a></li>
+          <li><a href="<%= ngoProfile.socialLinks.linkedin %>" target="_blank">LinkedIn</a></li>
+          <li><a href="<%= ngoProfile.socialLinks.instagram %>" target="_blank">Instagram</a></li>
+          <li><a href="<%= ngoProfile.socialLinks.youtube %>" target="_blank">YouTube</a></li>
+        </ul>
+      </div>
+    </section>
+  <% } %>
+
+  <% if (tab === 'expenditure') { %>
+    <section class="panel">
+      <h2>NGO Expenditures</h2>
+      <% if (!expenditures.length) { %>
+        <p>No expenditures recorded yet.</p>
+      <% } else { %>
+        <table class="table">
+          <thead>
+            <tr><th>Date</th><th>Title</th><th>Amount</th><th>Description</th><th>Receipt</th></tr>
+          </thead>
+          <tbody>
+            <% for (let i = 0; i < expenditures.length; i++) { var exp = expenditures[i]; %>
+              <tr>
+                <td><%= new Date(exp.spent_on).toLocaleDateString() %></td>
+                <td><%= exp.title %></td>
+                <td>₹ <%= exp.amount.toFixed(2) %></td>
+                <td><%= exp.description %></td>
+                <td><% if (exp.receipt_path) { %><a class="btn btn-outline" href="/<%= exp.receipt_path %>">View</a><% } else { %>N/A<% } %></td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      <% } %>
+    </section>
+  <% } %>
+
+  <% if (tab === 'requirements') { %>
+    <section class="panel">
+      <h2>NGO Requirements</h2>
+      <% if (!requirements.length) { %>
+        <p>No active requirements. Check back soon.</p>
+      <% } else { %>
+        <div class="cards">
+          <% for (let i = 0; i < requirements.length; i++) { var reqItem = requirements[i]; %>
+            <article class="card">
+              <h3><%= reqItem.title %></h3>
+              <p><strong>Budget:</strong> ₹ <%= reqItem.budget_amount.toFixed(2) %></p>
+              <p><strong>Timeline:</strong> <%= reqItem.tentative_start || 'TBD' %> - <%= reqItem.tentative_end || 'TBD' %></p>
+              <p><%= reqItem.description %></p>
+            </article>
+          <% } %>
+        </div>
+      <% } %>
+    </section>
+  <% } %>
+</section>
+<script src="/js/dashboard.js" defer></script>
+<%- include('../partials/footer') %>

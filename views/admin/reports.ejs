@@ -1,0 +1,83 @@
+<%- include('../partials/head') %>
+<section class="dashboard admin">
+  <h1>Financial Reports</h1>
+  
+  <div class="panel">
+    <div class="panel-header">
+      <h2>Generate New Report</h2>
+    </div>
+    
+    <div class="info-box" style="background: #e7f3ff; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border-left: 4px solid #0b7285;">
+      <h3 style="margin-top: 0; color: #0b7285;">About Financial Reports</h3>
+      <ul style="margin: 0; padding-left: 1.5rem;">
+        <li>Generate comprehensive financial summaries for any date range</li>
+        <li>Includes donation vs expenditure analysis</li>
+        <li>Top donors and donation trends</li>
+        <li>Campaign performance metrics</li>
+        <li>Export as PDF for sharing and archival</li>
+      </ul>
+    </div>
+    
+    <form method="post" action="/admin/reports/generate" style="max-width: 500px; margin-bottom: 2rem;">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+        <div>
+          <label for="start-date">Start Date *</label>
+          <input type="date" id="start-date" name="startDate" required>
+        </div>
+        <div>
+          <label for="end-date">End Date *</label>
+          <input type="date" id="end-date" name="endDate" required>
+        </div>
+      </div>
+      
+      <button type="submit" class="btn btn-primary">Generate Report</button>
+    </form>
+
+    <hr style="margin: 2rem 0;">
+    
+    <h2>Generated Reports</h2>
+    
+    <% if (reports.length === 0) { %>
+      <p>No reports generated yet. Create your first report using the form above.</p>
+    <% } else { %>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Filename</th>
+            <th>Generated</th>
+            <th>Size</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% reports.forEach((report) => { %>
+            <tr>
+              <td><strong><%= report.filename %></strong></td>
+              <td><%= new Date(report.created).toLocaleString() %></td>
+              <td><%= (report.size / 1024).toFixed(2) %> KB</td>
+              <td>
+                <div class="action-group">
+                  <a href="/admin/reports/<%= report.filename %>/download" class="btn btn-outline">Download</a>
+                  <form method="post" action="/admin/reports/<%= report.filename %>/delete" style="display: inline;">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <button type="submit" class="btn btn-outline" 
+                            onclick="return confirm('Are you sure you want to delete this report?')">
+                      Delete
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    <% } %>
+    
+    <div style="margin-top: 2rem;">
+      <a href="/admin/dashboard" class="btn btn-outline">Back to Dashboard</a>
+    </div>
+  </div>
+</section>
+<%- include('../partials/footer') %>

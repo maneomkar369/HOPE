@@ -1,0 +1,25 @@
+<%- include('../partials/head') %>
+<section class="auth-card">
+  <h1>Sign in</h1>
+  <form method="post" action="/auth/signin" class="form-grid">
+    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+    <label class="span-2">
+      Email
+      <input type="email" name="email" value="<%= values.email || '' %>" required>
+    </label>
+    <label>
+      Password
+      <input type="password" name="password" required>
+    </label>
+    <label>
+      Role
+      <select name="role">
+        <option value="user" <%= values.role === 'user' ? 'selected' : '' %>>Donor</option>
+        <option value="admin" <%= values.role === 'admin' ? 'selected' : '' %>>NGO Admin</option>
+      </select>
+    </label>
+    <button class="btn btn-primary span-2" type="submit">Sign in</button>
+  </form>
+  <p class="hint">No account yet? <a href="/auth/signup">Create one</a>.</p>
+</section>
+<%- include('../partials/footer') %>

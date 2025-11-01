@@ -20,7 +20,7 @@ A comprehensive web application for managing NGO finances, donations, campaigns,
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/omkarmane369/HOPE.git
+git clone https://github.com/maneomkar369/HOPE.git
 cd HOPE
 ```
 
@@ -301,7 +301,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Support
 
 For issues, questions, or contributions:
-- **GitHub Issues**: [Create an issue](https://github.com/omkarmane369/HOPE/issues)
+- **GitHub Issues**: [Create an issue](https://github.com/maneomkar369/HOPE/issues)
 - **Email**: admin@ngo.org
 
 ---
